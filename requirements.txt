@@ -1,0 +1,2 @@
+python-dotenv
+twitch_chat_irc
