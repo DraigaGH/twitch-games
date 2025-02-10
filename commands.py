@@ -242,6 +242,21 @@ def send_command(message_sent):
                     
                     else:
                         new_message += "_ "
+                
+                if guesses_left == 0:
+                    new_message = f"You lost! The word was {hangman_word}"
+
+                    playing_hangman = False
+
+                    used_letters = {"a": False, "b": False, "c": False, "d": False, "e": False, "f": False, "g": False, "h": False, "i": False, "j": False, "k": False, "l": False,
+                        "m": False, "n": False, "o": False, "p": False, "q": False, "r": False, "s": False, "t": False, "u": False, "v": False, "w": False, "x": False,
+                        "y": False, "z": False}
+
+                    guesses_left = 6
+
+                    hangman_word = ""
+
+                    correct_guessed_letters = []
 
                 connection.send(CHANNEL, new_message)
     
