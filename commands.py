@@ -1,6 +1,7 @@
 from twitch_chat_irc import twitch_chat_irc
 from dotenv import load_dotenv, find_dotenv
-from itertools import combinations
+from datetime import date, datetime, timedelta
+from time import sleep
 import os
 import random
 from nltk.corpus import words
@@ -48,6 +49,12 @@ playing_anagram = False
 anagram_list = []
 
 wordlist = words.words()
+
+start_time = datetime.now()
+end_time = datetime.now() + timedelta(minutes=1)
+
+used_anagrams = []
+anagram_scores = {}
 
 mydict = {}
 for word in wordlist:
@@ -100,6 +107,9 @@ def send_command(message_sent):
     global playing_anagram
     global anagram_list
     global wordlist
+    global start_time
+    global end_time
+    global used_anagrams
 
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
@@ -343,7 +353,7 @@ def send_command(message_sent):
         playing_reverse = True
         connection.send(CHANNEL, first_message)
     
-    elif message_sent["message"].split()[0] == "!guess" and playing_reverse:
+    elif message_sent["message"].split()[0] == "!guessword" and playing_reverse:
         if len(message_sent["message"].split()) == 1:
             if reverse_guesses > 1:
                 new_message = f"Please add the word you want to guess after !guess. You have {reverse_guesses} guesses left"
@@ -380,18 +390,42 @@ def send_command(message_sent):
                 connection.send(CHANNEL, new_message)
     
     # -------- ANAGRAM COMPETITION STARTS HERE -------------
-    elif message_sent["message"] == "!anagramcompetition":
+    elif message_sent["message"] == "!anagramgame" and not playing_anagram:
         while len(anagram_word) < 7:
             anagram_word = hangman_words[random.randint(0, len(hangman_words))]
+
+        print(f"THE ANAGRAM WORD IS {anagram_word}")
         
         anagrams = get_anagrams(anagram_word)
         anagrams = [anagram for anagram in anagrams if len(anagram) > 3]
 
         playing_anagram = True
+        start_time = datetime.now()
+        end_time = start_time + timedelta(minutes=1)
+
+        anagram_word_letters = list(anagram_word)
+
+        random.shuffle(anagram_word_letters)
+
+        message = "You have 1 minute to guess as many anagrams as you can from the letters "
+        for letter in anagram_word_letters[:len(anagram_word) - 1]:
+            message += f"{letter}, "
+        
+        message += f"{anagram_word_letters[-1]}!"
+        message += " Whoever has guessed the most anagrams at the end wins! (Use !guess 'word' to guess an anagram)."
+
+        connection.send(CHANNEL, message)
+
+
+    if playing_anagram and datetime.now() < end_time:
+        if message_sent["message"].split()[0] == "!guess":
+            if len(message_sent["message"].split()) == 1:
+                connection.send(CHANNEL, f"{message_sent["display-name"]}, please type your anagram after !guess.")
     
+    else:
+        playing_anagram = False
             
-            
-            
+
 def main():
     connection.listen(CHANNEL, on_message=send_command)
 
