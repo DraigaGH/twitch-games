@@ -1,7 +1,10 @@
 from twitch_chat_irc import twitch_chat_irc
 from dotenv import load_dotenv, find_dotenv
+from itertools import combinations
 import os
 import random
+from nltk.corpus import words
+
 
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
@@ -10,7 +13,7 @@ OAUTH_TOKEN = os.getenv("OAUTH_TOKEN")
 CHANNEL = os.getenv("CHANNEL")
 MY_CHANNEL = os.getenv("MY_CHANNEL")
 
-connection = twitch_chat_irc.TwitchChatIRC("MY_CHANNEL", OAUTH_TOKEN)
+connection = twitch_chat_irc.TwitchChatIRC(MY_CHANNEL, OAUTH_TOKEN)
 
 play_game = {}
 
@@ -38,6 +41,52 @@ playing_reverse = False
 
 reverse_guesses = 5
 
+# anagram competition stuff
+anagram_word = ""
+playing_anagram = False
+
+anagram_list = []
+
+wordlist = words.words()
+
+mydict = {}
+for word in wordlist:
+    word = word.rstrip()
+    temp = list(word)
+    temp.sort()
+    letters = ''.join(temp)
+
+    if letters in mydict:
+        mydict[letters].append(word)
+    else:
+        mydict[letters] = [word]
+
+def contains_letters(subword, word):
+    wordlen = len(word)
+    subwordlen = len(subword)
+
+    if subwordlen > wordlen:
+        return False
+
+    word = list(word)
+    for c in subword:
+        try:
+            index = word.index(c)
+        except ValueError:
+            return False
+        word.pop(index)
+    return True
+
+def get_anagrams(word):
+    output = []
+    for key in mydict:
+        if contains_letters(key, word):
+            output.extend(mydict[key])
+
+    output.sort(key=len)
+    return output
+
+
 def send_command(message_sent):
     global hangman_word
     global playing_hangman
@@ -47,6 +96,10 @@ def send_command(message_sent):
     global reverse_word
     global playing_reverse
     global reverse_guesses
+    global anagram_word
+    global playing_anagram
+    global anagram_list
+    global wordlist
 
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
@@ -325,6 +378,18 @@ def send_command(message_sent):
                     reverse_guesses = 5
 
                 connection.send(CHANNEL, new_message)
+    
+    # -------- ANAGRAM COMPETITION STARTS HERE -------------
+    elif message_sent["message"] == "!anagramcompetition":
+        while len(anagram_word) < 7:
+            anagram_word = hangman_words[random.randint(0, len(hangman_words))]
+        
+        anagrams = get_anagrams(anagram_word)
+        anagrams = [anagram for anagram in anagrams if len(anagram) > 3]
+
+        playing_anagram = True
+    
+            
             
             
 def main():
