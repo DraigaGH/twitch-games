@@ -1,3 +1,4 @@
 python-dotenv
 twitch_chat_irc
 nltk
+python-dotenv
