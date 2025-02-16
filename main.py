@@ -2,9 +2,9 @@ from twitch_chat_irc import twitch_chat_irc
 from dotenv import load_dotenv, find_dotenv
 from datetime import date, datetime, timedelta
 from time import sleep
+from nltk.corpus import words
 import os
 import random
-from nltk.corpus import words
 
 
 dotenv_path = find_dotenv()
