@@ -407,28 +407,34 @@ def send_command(message_sent):
 
         random.shuffle(anagram_word_letters)
 
-        message = "You have 1 minute to guess as many anagrams as you can from the letters "
-        for letter in anagram_word_letters[:len(anagram_word) - 1]:
+        message = "Whoever can get the highest score in 1 minute by guessing anagrams wins! "
+
+        message += "Your letters are: "
+        for letter in anagram_word_letters[:len(anagram_word)]:
             message += f"{letter}, "
-        
-        message += f"{anagram_word_letters[-1]}!"
-        message += " Whoever has guessed the most anagrams at the end wins! (Use !guess 'word' to guess an anagram)."
 
         connection.send(CHANNEL, message)
 
 
     if playing_anagram and datetime.now() < end_time:
+        if message_sent["display-name"] not in anagram_scores:
+            anagram_scores[message_sent["display-name"]] = 0
+
         if message_sent["message"].split()[0] == "!guess":
             if len(message_sent["message"].split()) == 1:
                 connection.send(CHANNEL, f"{message_sent["display-name"]}, please type your anagram after !guess.")
+            
+            else:
+                if message_sent["message"].split()[1] in anagram_list and message_sent["message"].split()[1] not in used_anagrams:
+                    anagram_scores[message_sent["display-name"]] += len(message_sent["message"].split()[1])
     
     else:
         playing_anagram = False
+        anagram_word = ""
             
 
 def main():
     connection.listen(CHANNEL, on_message=send_command)
-
 
 if __name__ == "__main__":
     main()
